@@ -1,7 +1,7 @@
 import os
 import spacy
 
-def calculate_precision(text, expected_entities_count):
+def calculate_precision(text, expected_entities):
     # Get the current directory of the script
     base_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -14,30 +14,38 @@ def calculate_precision(text, expected_entities_count):
     # Apply the model to the provided text
     doc = nlp(text)
 
-    # Imprime as entidades detectadas
+    # Print the detected entities
+    print("Entidades detectadas:")
     for entity in doc.ents:
         print("Entity:", entity.text, "| Label:", entity.label_)
 
-    # Extract the entities predicted by the model
-    predicted_entities = [entity.text for entity in doc.ents]
+    # Normalize entities for comparison (e.g., lowercase, strip whitespace)
+    predicted_entities = [ent.text.strip().lower() for ent in doc.ents]
+    expected_entities = [ent.strip().lower() for ent in expected_entities]
 
-    # Calculate the number of correctly recognized entities
-    correct_entities_count = len(predicted_entities)
+    # Calculate correct predictions (intersection)
+    correct_entities = [ent for ent in predicted_entities if ent in expected_entities]
 
-    # Ensure the precision doesn't exceed 1
-    precision = min(correct_entities_count, expected_entities_count) / expected_entities_count if expected_entities_count > 0 else 0.0
+    # Avoid counting duplicates twice
+    correct_entities_set = set(correct_entities)
 
-    # Convert the precision to percentage
+    # Calculate precision
+    precision = len(correct_entities_set) / len(expected_entities) if expected_entities else 0.0
+
+    # Convert to percentage
     precision_percentage = precision * 100
 
     return precision_percentage
 
-# Example usage
+# Exemplo de uso
 example = {
     "text": "Em uma manhã tranquila na floresta, o leão, com sua juba dourada, caminhava lentamente enquanto observava o elefante tomando água do rio. O macaco saltava de galho em galho, fazendo brincadeiras com a onça-pintada, que o observava com seus olhos atentos. No chão, a tartaruga se movia com paciência, e perto de um arbusto, a lebre corria apressada, seguida pela raposa astuta. A águia sobrevoava a cena, com suas asas largas cortando o vento, enquanto o crocodilo se aquecia sob o sol. O coelho estava escondido em uma toca, enquanto a coruja vigiava a floresta à noite. A cobra deslizou pelo terreno, e a girafa, com seu pescoço longo, olhava por cima das árvores, ao lado de um grupo de zebras pastando tranquilamente. Não muito longe dali, o lobo uivava à distância, e o urso caminhava perto do riacho. No alto, o beija-flor pairava sobre uma flor, enquanto o pinguim nadava nas águas geladas de um lago remoto.",
-    "count": 17
+    "expected_entities": [
+        "leão", "elefante", "macaco", "onça-pintada", "tartaruga", "lebre",
+        "raposa", "águia", "crocodilo", "coelho", "coruja", "cobra",
+        "girafa", "zebra", "lobo", "urso", "beija-flor", "pinguim"
+    ]
 }
 
-precision = calculate_precision(example["text"], example["count"])
-
+precision = calculate_precision(example["text"], example["expected_entities"])
 print("Model precision:", precision, "%")
